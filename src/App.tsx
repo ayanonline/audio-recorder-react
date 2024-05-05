@@ -71,6 +71,8 @@ const App = () => {
           echoCancellation: true,
         },
       });
+      playAudio(audioStream);
+
       setIsNotAllow(false);
       localStorage.setItem("audioPermission", "YES");
 

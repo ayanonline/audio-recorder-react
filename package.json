@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "author": {
+    "email": "ayanghosh.dev@gmail.com",
+    "name": "Ayan Ghosh"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

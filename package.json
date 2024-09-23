@@ -1,13 +1,40 @@
 {
   "name": "react-audio-recorder",
-  "private": true,
+  "private": false,
   "version": "1.0.0",
   "description": "hook for record audio in react.js project with deviceChange functionality and many more...",
   "type": "module",
-  "author": {
-    "email": "ayanghosh.dev@gmail.com",
-    "name": "Ayan Ghosh"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ayanonline/react-audio-recorder.git"
   },
+  "author": "Ayan Ghosh",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "reactjs",
+    "nextjs",
+    "audio",
+    "voice",
+    "audio recording",
+    "audio recorder",
+    "voice recording",
+    "voice recorder",
+    "recorder",
+    "recording",
+    "getUserMedia",
+    "mediaDevices",
+    "ffmpeg",
+    "download audio",
+    "download",
+    "mp3",
+    "webm",
+    "wav",
+    "mpeg"
+  ],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

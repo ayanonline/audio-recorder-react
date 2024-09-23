@@ -1,12 +1,13 @@
-import { ChangeEvent, useEffect, useState } from "react";
-import { formatTime } from "./utils";
+import { useEffect, useState } from "react";
 
-const App = () => {
+const useMediaRecorder = () => {
   const [isNotAllow, setIsNotAllow] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [isRecodring, setIsRecording] = useState<boolean>(false);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [timerInterval, setTimerInterval] = useState<number>();
+  const [timerInterval, setTimerInterval] = useState<number | undefined>(
+    undefined
+  );
   const [recordingBlob, setRecordingBlob] = useState<Blob>();
   const [selectedAudioDevice, setSelectedAudioDevice] =
     useState<string>("default");
@@ -14,23 +15,12 @@ const App = () => {
     null
   );
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
-  const [microphoneAccess, setMicrophoneAccess] = useState<boolean>(false);
+  const [audioPermission, setAudioPermission] = useState<boolean>();
 
-  useEffect(() => {
-    return () => stopTimer();
-  }, []);
-
-  // PROCESS RECORDING BLOB
-  useEffect(() => {
-    if (recordingBlob) {
-      console.log("***blob created***");
-      console.log(recordingBlob);
-    }
-  }, [recordingBlob]);
-
-  /**If has microphone access then get all audio devices */
+  /**If has microphone access then get all audio devices and cache selected audio-device */
   useEffect(() => {
     if (localStorage.getItem("audioPermission") === "YES") {
+      setAudioPermission(true);
       navigator.mediaDevices
         .enumerateDevices()
         .then((devices) => {
@@ -38,13 +28,23 @@ const App = () => {
             (device) => device.kind === "audioinput"
           );
           setAudioDevices(audioInputs);
-          setSelectedAudioDevice(audioInputs[0]?.deviceId || "default");
+          if (
+            localStorage.getItem("deviceId") &&
+            audioInputs.find(
+              (device) => device.deviceId === localStorage.getItem("deviceId")
+            )
+          ) {
+            setSelectedAudioDevice(localStorage.getItem("deviceId")!);
+          } else {
+            setSelectedAudioDevice(audioInputs[0]?.deviceId || "default");
+          }
         })
         .catch(() => {
           localStorage.setItem("audioPermission", "NO");
+          setAudioPermission(false);
         });
     }
-  }, [microphoneAccess]);
+  }, [audioPermission]);
 
   // START TIMER
   const startTimer = () => {
@@ -71,16 +71,16 @@ const App = () => {
           echoCancellation: true,
         },
       });
-      playAudio(audioStream);
 
       setIsNotAllow(false);
       localStorage.setItem("audioPermission", "YES");
 
-      setMicrophoneAccess(true);
+      setAudioPermission(true);
 
       // CREATE MEDIA_RECORDER
       const recorder = new MediaRecorder(audioStream);
-
+      setRecordingTime(0);
+      setIsPaused(false);
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
@@ -92,12 +92,13 @@ const App = () => {
         recorder.stream.getTracks().forEach((t) => t.stop());
         setMediaRecorder(undefined);
       };
-    } catch (error: unknown) {
-      // WE CAN HANDLE MIC PERMISSION RELATED ERROR HERE ALSO
-      localStorage.setItem("audioPermission", "NO");
-      setIsNotAllow(true);
-      setMicrophoneAccess(false);
-      console.log(error);
+    } catch (err: unknown) {
+      const error = err as DOMException;
+      if (error.message === "Permission denied") {
+        localStorage.setItem("audioPermission", "NO");
+        setIsNotAllow(true);
+        setAudioPermission(false);
+      }
     }
   };
 
@@ -123,40 +124,33 @@ const App = () => {
     }
   };
 
-  const handleChangeMic = (e: ChangeEvent<HTMLSelectElement>) => {
-    console.log(e.target.value);
-    setSelectedAudioDevice(e.target.value);
+  const pauseRecording = () => {
+    setIsPaused(true);
+    stopTimer();
+    mediaRecorder?.pause();
   };
 
-  // Play audio
-  function playAudio(stream: MediaStream) {
-    const audio = new Audio();
-    audio.srcObject = stream;
-    audio.play();
-  }
+  const changeAudioDevice = (deviceId: string) => {
+    setSelectedAudioDevice(deviceId);
+    localStorage.setItem("deviceId", deviceId);
+  };
 
-  return (
-    <div>
-      <h1>Recording POC</h1>
-      <h3>{formatTime(recordingTime)}</h3>
-      {isNotAllow && <h3>Mic is disabled, give mic access to record</h3>}
-
-      <button onClick={startRecording}>Start Recording</button>
-      <button onClick={stopRecording}>Stop Recording</button>
-
-      <button onClick={togglePauseResume}>
-        {isPaused ? "Resume" : "Pause"} Recording
-      </button>
-
-      <select name="" id="" onChange={handleChangeMic} disabled={isRecodring}>
-        {audioDevices?.map((device) => (
-          <option value={device.deviceId} key={device.deviceId}>
-            {device.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+  return {
+    isNotAllow,
+    isPaused,
+    isRecording,
+    recordingBlob,
+    recordingTime,
+    setRecordingTime,
+    mediaRecorder,
+    selectedAudioDevice,
+    audioDevices,
+    changeAudioDevice,
+    startRecording,
+    stopRecording,
+    togglePauseResume,
+    pauseRecording,
+  };
 };
 
-export default App;
+export default useMediaRecorder;

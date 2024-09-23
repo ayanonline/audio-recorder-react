@@ -1,12 +1,12 @@
 {
-  "name": "react-audio-recorder",
+  "name": "audio-recorder-react",
   "private": false,
   "version": "1.0.0",
   "description": "hook for record audio in react.js project with deviceChange functionality and many more...",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ayanonline/react-audio-recorder.git"
+    "url": "https://github.com/ayanonline/audio-recorder-react.git"
   },
   "author": "Ayan Ghosh",
   "license": "MIT",
